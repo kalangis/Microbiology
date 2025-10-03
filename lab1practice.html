@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Microbiology Lab 1 Quiz Game</title>
+<style>
+body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+h1 { text-align: center; }
+#questionBox, #explanationBox { margin: 20px auto; width: 80%; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+button { margin: 10px; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor:pointer; }
+#timer { font-size: 20px; color: red; font-weight: bold; text-align:center; }
+#scoreBox { font-size: 18px; text-align:center; margin-top: 10px; }
+#leaderboard { margin-top: 30px; }
+</style>
+</head>
+<body>
+<h1>Microbiology Lab 1 Quiz Game</h1>
+<div id="timer"></div>
+<div id="scoreBox"></div>
+<div id="questionBox"></div>
+<div id="explanationBox"></div>
+<div id="leaderboard">
+  <h2>Leaderboard</h2>
+  <ol id="leaderboardList"></ol>
+</div>
+<div style="text-align:center;">
+<button id="startBtn">Start Game</button>
+</div>
+
+<script>
+const questions = [
+    // Lab Safety & Equipment – Basic Rules
+    {q: "Which items are not allowed at the lab bench?", a:["Eating, drinking, gum, phones","Pens and paper","Lab coats","Gloves"], correct:0, exp:"Eating, drinking, gum, or phones are not allowed at lab benches."},
+    {q: "What should you always wear when required in the lab?", a:["Gloves, goggles, and lab coat","Just gloves","Just goggles","Just lab coat"], correct:0, exp:"Wear gloves, goggles, and lab coats when required for safety."},
+    {q: "What should you do with long hair in the lab?", a:["Tie it back","Leave it loose","Cover with a hat","Cut it short"], correct:0, exp:"Tie back long hair to prevent accidents."},
+    {q: "When should you disinfect your lab bench?", a:["Before and after lab","Only before lab","Only after lab","Never"], correct:0, exp:"Disinfect benches before and after lab to prevent contamination."},
+    {q: "How should you dispose of sharps and biohazard waste?", a:["Use designated bins","Throw in trash","Flush down sink","Keep on bench"], correct:0, exp:"Dispose of waste correctly using sharps containers, biohazard bins, or paper trash bins."},
+    {q: "When should you wash your hands in the lab?", a:["Always before leaving","Only before handling cultures","Only after using chemicals","Never"], correct:0, exp:"Always wash hands before leaving the lab to prevent contamination."},
+
+    // Common Equipment
+    {q: "What is an inoculating loop/stab used for?", a:["Transfers microorganisms aseptically","Holds test tubes","Blots stained slides","Lights a Bunsen burner"], correct:0, exp:"An inoculating loop or stab is used to transfer microorganisms aseptically."},
+    {q: "What is a test tube holder used for?", a:["Holds hot tubes","Transfers microbes","Cleans lenses","Controls light"], correct:0, exp:"A test tube holder is used to safely hold hot test tubes."},
+    {q: "Which paper is used to clean microscope lenses?", a:["Lens paper","Bibulous paper","Paper towels","Sandpaper"], correct:0, exp:"Lens paper is used only to clean microscope lenses."},
+    {q: "Which paper is used to blot stained slides?", a:["Bibulous paper","Lens paper","Tissue","Filter paper"], correct:0, exp:"Bibulous paper is used to blot slides; do not wipe."},
+    {q: "What does a striker do?", a:["Lights Bunsen burner","Sterilizes loops","Moves slides","Controls light"], correct:0, exp:"A striker is used to light a Bunsen burner."},
+    {q: "What is the function of incubators?", a:["Grow microbes at controlled temperature","Store slides","Sterilize equipment","Clean the bench"], correct:0, exp:"Incubators grow microbes at controlled temperatures."},
+    {q: "What is the purpose of a cold room?", a:["Slows growth and stores microbes","Incubates bacteria","Cleans slides","Flames loops"], correct:0, exp:"A cold room slows microbial growth for storage."},
+    {q: "How does an autoclave work?", a:["Sterilizes via heat and pressure","Blows air over cultures","Lights Bunsen burners","Blots slides"], correct:0, exp:"An autoclave sterilizes using heat and pressure."},
+
+    // Ubiquity of Microorganisms
+    {q: "What does 'microbes are ubiquitous' mean?", a:["Found everywhere","Found only in soil","Found only in water","Rarely found"], correct:0, exp:"Ubiquitous means microbes are found everywhere."},
+    {q: "Which environment has high salt where microbes can thrive?", a:["Great Salt Lake","Yellowstone","Mine drainage","Human stomach"], correct:0, exp:"The Great Salt Lake has high salt where microbes thrive."},
+    {q: "Which environment has high heat where microbes can thrive?", a:["Yellowstone hot springs","Great Salt Lake","Mine drainage","Stomach acid"], correct:0, exp:"Yellowstone hot springs have high heat where microbes thrive."},
+    {q: "Which environment has low pH where microbes can thrive?", a:["Mine drainage","Great Salt Lake","Yellowstone","Stomach acid"], correct:0, exp:"Mine drainage has low pH where microbes thrive."},
+    {q: "What extreme environment in the human body supports microbial growth?", a:["Stomach acid","Skin","Saliva","Blood"], correct:0, exp:"Stomach acid is an extreme environment where some microbes can survive."},
+    {q: "How do microbial cells compare to human cells?", a:["Outnumber human cells 10–12:1","Equal in number","Fewer than human cells","Never found in humans"], correct:0, exp:"Microbes outnumber human cells by roughly 10–12 to 1."},
+    {q: "What is an example of beneficial microbes?", a:["Humans and microbes co-evolved","Harmful infections","Toxins only","No examples"], correct:0, exp:"Many microbes are beneficial; humans and microbes co-evolved."},
+
+    // Handwashing & Cleaning Agents
+    {q: "What is the minimum handwashing time?", a:["10s","20s","30s","1 min"], correct:1, exp:"Minimum handwashing time is 20 seconds."},
+    {q: "What is the optimal handwashing time?", a:["20s","25s","30s","1 min"], correct:2, exp:"Optimal handwashing time is ~30 seconds, roughly the length of 'ABC' or 'Happy Birthday' song."},
+    {q: "What did the Glow Germ experiment show?", a:["Missed spots under UV","All germs gone","No bacteria present","Everyone washed perfectly"], correct:0, exp:"Glow Germ experiment shows missed spots under UV light."},
+    {q: "What does the 'before' plate show after touching unwashed fingers?", a:["Lots of mixed bacteria","No bacteria","One species only","Sterile surface"], correct:0, exp:"The 'before' plate shows lots of mixed bacteria from unwashed fingers."},
+    {q: "What does the 'after' plate show after cleaning?", a:["Fewer species, sometimes one dominates","Lots of mixed bacteria","All species grow equally","No growth"], correct:0, exp:"The 'after' plate shows fewer species; sometimes a resistant species dominates."},
+    {q: "What is competitive exclusion in cleaning agents?", a:["Resistant bacteria survive and dominate","All bacteria die","No effect","All bacteria grow equally"], correct:0, exp:"Competitive exclusion means resistant bacteria survive cleaner and grow more once competitors are removed."},
+
+    // Microscopy Basics
+    {q: "What type of microscope is used in Lab 1?", a:["Compound Binocular Light Microscope","Electron Microscope","Dissecting Microscope","Phase Contrast Microscope"], correct:0, exp:"Lab 1 uses a compound binocular light microscope."},
+    {q: "What is the ocular lens magnification?", a:["10x","4x","40x","100x"], correct:0, exp:"The ocular lens is 10x."},
+    {q: "What are the common objective lens magnifications?", a:["4x, 10x, 40x, 100x oil","1x, 5x, 20x","50x, 100x, 200x","None"], correct:0, exp:"Objective lenses include 4x, 10x, 40x, 100x oil."},
+    {q: "What does the nosepiece do?", a:["Rotates objectives","Controls light","Raises the stage","Focuses image"], correct:0, exp:"The nosepiece rotates the objective lenses."},
+    {q: "What do the stage and knobs do?", a:["Center & move slide","Focus light","Rotate objectives","Clean lenses"], correct:0, exp:"Stage and knobs are used to center and move the slide."},
+    {q: "What does coarse and fine focus do?", a:["Raise/lower stage to focus","Control light","Rotate objectives","Clean lenses"], correct:0, exp:"Coarse and fine focus raise or lower the stage to focus the image."},
+    {q: "What do condenser and diaphragm control?", a:["Light intensity","Slide movement","Lens magnification","Sterility"], correct:0, exp:"Condenser and diaphragm control the amount of light passing through the specimen."},
+    {q: "How should you carry the microscope?", a:["With 2 hands","One hand","No hands","By the cord"], correct:0, exp:"Carry the microscope with two hands for safety."},
+    {q: "Which objective should you start with?", a:["4x","10x","40x","100x"], correct:0, exp:"Always start at 4x to locate the specimen."},
+    {q: "In what order do you focus?", a:["Coarse first, then fine","Fine first, then coarse","Only coarse","Only fine"], correct:0, exp:"Use coarse focus first, then fine focus."},
+    {q: "When should oil immersion be used?", a:["Only at 100x","Only at 4x","At 40x","Never"], correct:0, exp:"Oil immersion is used only at 100x."},
+    {q: "What should you use to clean lenses?", a:["Lens paper","Bibulous paper","Paper towel","Cloth"], correct:0, exp:"Use lens paper only to clean lenses."},
+    {q: "What is image inversion?", a:["Microscope flips image upside down & backwards","Image doubles","No change","Rotates 90 degrees"], correct:0, exp:"Microscope flips the image upside down and backwards."},
+
+    // Slide Prep Techniques
+    {q: "How do you prepare a wet mount slide?", a:["Drop water + cover slip at 90°","Use Vaseline","Stab agar","Use bibulous paper"], correct:0, exp:"Wet mount: drop water and place cover slip at 90°."},
+    {q: "What is an advantage of a wet mount?", a:["Quick and easy","Preserves permanently","Shows motility best","High resolution"], correct:0, exp:"Wet mounts are quick and easy to prepare."},
+    {q: "What is a disadvantage of a wet mount?", a:["Cells can be squished and dries quickly","Takes hours","Only works for bacteria","Cannot view"], correct:0, exp:"Wet mounts can squish cells and dry quickly."},
+    {q: "How do you prepare a hanging drop slide?", a:["Depression slide + Vaseline + cover slip","Drop water only","Stab agar","Use microscope directly"], correct:0, exp:"Hanging drop: use depression slide, Vaseline, and cover slip to suspend drop."},
+    {q: "What is an advantage of a hanging drop?", a:["Organisms not squished; good for motility","Quick","Dries fast","Easy to prepare"], correct:0, exp:"Hanging drop suspends organisms so they are not squished and is good for motility observation."},
+    {q: "What is a disadvantage of a hanging drop?", a:["Harder to prepare","Destroys cells","Cannot see","Always dries"], correct:0, exp:"Hanging drop slides are harder to prepare than wet mounts."},
+
+    // Microbes Observed
+    {q: "What type of organism is Anabaena?", a:["Prokaryote","Eukaryote","Fungus","Virus"], correct:0, exp:"Anabaena is a prokaryotic cyanobacteria."},
+    {q: "Is Anabaena autotrophic or heterotrophic?", a:["Autotroph","Heterotroph","Both","Neither"], correct:0, exp:"Anabaena is autotrophic."},
+    {q: "Does Anabaena move?", a:["No","Yes","Sometimes","Only in water"], correct:0, exp:"Anabaena has no motility."},
+    {q: "What type of organism is Spirogyra?", a:["Eukaryotic protist","Prokaryote","Fungus","Virus"], correct:0, exp:"Spirogyra is a eukaryotic protist."},
+    {q: "Is Spirogyra autotrophic or heterotrophic?", a:["Autotroph","Heterotroph","Both","Neither"], correct:0, exp:"Spirogyra is autotrophic."},
+    {q: "What is unique about Spirogyra?", a:["Green filaments with spiral chloroplasts","Cilia","Flagella","Pseudopodia"], correct:0, exp:"Spirogyra has green filaments and spiral chloroplasts."},
+    {q: "What type of organism is Euglena?", a:["Eukaryotic protist","Prokaryote","Fungus","Virus"], correct:0, exp:"Euglena is a eukaryotic protist."},
+    {q: "Is Euglena autotrophic or heterotrophic?", a:["Autotroph/heterotroph","Only autotroph","Only heterotroph","Neither"], correct:0, exp:"Euglena can be autotrophic or heterotrophic."},
+    {q: "What special feature does Euglena have for movement?", a:["Flagella","Cilia","Pseudopodia","No movement"], correct:0, exp:"Euglena moves using flagella."},
+    {q: "What type of organism is Pandorina?", a:["Eukaryotic protist","Prokaryote","Fungus","Virus"], correct:0, exp:"Pandorina is a eukaryotic protist."},
+    {q: "Does Pandorina have motility?", a:["Yes, flagella","No","Yes, cilia","Yes, pseudopodia"], correct:0, exp:"Pandorina is motile with flagella."},
+    {q: "What type of organism is Paramecium?", a:["Eukaryotic protist","Prokaryote","Fungus","Virus"], correct:0, exp:"Paramecium is a eukaryotic protist."},
+    {q: "How does Paramecium move?", a:["Fast swimmer using cilia","Flagella","Pseudopodia","Does not move"], correct:0, exp:"Paramecium moves using cilia and is a fast swimmer."},
+    {q: "What type of organism is Vorticella?", a:["Eukaryotic protist","Prokaryote","Fungus","Virus"], correct:0, exp:"Vorticella is a eukaryotic protist."},
+    {q: "Describe Vorticella's structure.", a:["Tulip-shaped with cilia at mouth","Filamentous","Spiral","Spherical"], correct:0, exp:"Vorticella is tulip-shaped with cilia at the mouth."},
+    {q: "What type of organism is Amoeba?", a:["Eukaryotic protist","Prokaryote","Fungus","Virus"], correct:0, exp:"Amoeba is a eukaryotic protist."},
+    {q: "How does Amoeba move and eat?", a:["Pseudopodia, flexible, engulfs food","Flagella","Cilia","Passive"], correct:0, exp:"Amoeba uses pseudopodia to move and engulf food."},
+
+    // Main Takeaways
+    {q: "Why are microbes important?", a:["They are everywhere & essential to life","They are harmful only","Not important","Rarely found"], correct:0, exp:"Microbes are everywhere and essential to life."},
+    {q: "What is the best defense against microbes?", a:["Proper handwashing 20–30s","Using gloves only","Disinfecting bench only","Nothing"], correct:0, exp:"Proper handwashing for 20–30 seconds is the best defense."},
+    {q: "What can happen with resistant microbes after cleaning?", a:["They may dominate","They die immediately","They disappear","Nothing"], correct:0, exp:"Cleaning agents differ in effectiveness; resistant microbes may dominate."},
+    {q: "Why are microscopy skills essential?", a:["To observe bacteria & protists","To eat safely","To clean benches","To label slides"], correct:0, exp:"Microscopy skills are essential for observing bacteria and protists."},
+    {q: "What is the difference between wet mount and hanging drop slides?", a:["Different strengths for motility study","Wet mount is always better","Hanging drop is faster","No difference"], correct:0, exp:"Wet mount and hanging drop have different strengths for observing motility."}
+];
+
+let currentQ = 0;
+let score = 0;
+let timer;
+let timeLeft;
+
+const questionBox = document.getElementById('questionBox');
+const explanationBox = document.getElementById('explanationBox');
+const timerBox = document.getElementById('timer');
+const scoreBox = document.getElementById('scoreBox');
+const startBtn = document.getElementById('startBtn');
+const leaderboardList = document.getElementById('leaderboardList');
+
+function startGame(){
+    startBtn.style.display='none';
+    currentQ=0;
+    score=0;
+    scoreBox.textContent=`Score: ${score}`;
+    showQuestion();
+}
+
+function showQuestion(){
+    explanationBox.innerHTML='';
+    if(currentQ >= questions.length){ endGame(); return; }
+    let q = questions[currentQ];
+    questionBox.innerHTML=`<h2>${q.q}</h2>` + q.a.map((ans,i)=>`<button onclick="checkAnswer(${i})">${ans}</button>`).join('');
+    timeLeft = 30 + Math.floor(Math.random()*11);
+    timerBox.textContent = `Time: ${timeLeft}s`;
+    timer = setInterval(()=>{
+        timeLeft--;
+        timerBox.textContent = `Time: ${timeLeft}s`;
+        if(timeLeft<=0){ 
+            clearInterval(timer); 
+            showExplanation(false, 'Time\'s up!'); 
+        }
+    },1000);
+}
+
+function checkAnswer(choice){
+    clearInterval(timer);
+    let correct = questions[currentQ].correct;
+    if(choice===correct){ score++; showExplanation(true); }
+    else{ score--; showExplanation(false); }
+}
+
+function showExplanation(isCorrect, customMsg=''){
+    let q = questions[currentQ];
+    let msg = customMsg || (isCorrect ? 'Correct! ✅':'Wrong ❌');
+    explanationBox.innerHTML=`<p>${msg} ${q.exp}</p>` + `<button onclick="nextQ()">Next</button>`;
+    scoreBox.textContent = `Score: ${score}`;
+}
+
+function nextQ(){
+    currentQ++;
+    showQuestion();
+}
+
+function endGame(){
+    questionBox.innerHTML=`<h2>Game Over!</h2><p>Your Score: ${score}</p><button onclick="startGame()">Play Again</button>`;
+    explanationBox.innerHTML='';
+    timerBox.textContent='';
+    saveLeaderboard(score);
+    renderLeaderboard();
+}
+
+function saveLeaderboard(score){
+    let name = prompt('Enter your name for leaderboard:','Player');
+    if(!name) name='Player';
+    let lb = JSON.parse(localStorage.getItem('microLab1Leaderboard'))||[];
+    lb.push({name:name,score:score,date:new Date().toLocaleDateString()});
+    lb.sort((a,b)=>b.score-a.score);
+    localStorage.setItem('microLab1Leaderboard',JSON.stringify(lb.slice(0,10)));
+}
+
+function renderLeaderboard(){
+    let lb = JSON.parse(localStorage.getItem('microLab1Leaderboard'))||[];
+    leaderboardList.innerHTML = lb.map(e=>`<li>${e.name}: ${e.score} (${e.date})</li>`).join('');
+}
+
+startBtn.addEventListener('click',startGame);
+renderLeaderboard();
+</script>
+</body>
+</html>
+
